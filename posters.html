@@ -1,0 +1,27 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ROOMU | 教室QRコード印刷</title>
+<style>body{font-family:system-ui,sans-serif;background:#f3f7f4;color:#143b48;margin:0}.controls{max-width:950px;margin:auto;padding:24px}.controls a{color:#143b48}h1{margin:12px 0}label{display:block;margin:12px 0;font-weight:bold}input,select,button{font:inherit;padding:10px;border-radius:8px;border:1px solid #aaa}input{width:min(95%,700px)}button{background:#143b48;color:white;cursor:pointer}#posters{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:18px;padding:20px;max-width:950px;margin:auto}.poster{background:white;text-align:center;padding:30px 20px;border-radius:12px;break-after:page}.poster h2{font-size:44px;margin:12px}.poster canvas{width:260px;max-width:100%;height:auto}.poster p{line-height:1.6}.url{font-size:11px;overflow-wrap:anywhere}.warning{font-size:12px;color:#8e4035}#message{color:#18694d}@media print{@page{size:A4 portrait;margin:0}.controls{display:none}body{background:white}#posters{display:block;margin:0;padding:0;max-width:none}.poster{border-radius:0;box-sizing:border-box;width:210mm;height:297mm;padding:34mm 16mm;page-break-after:always}.poster canvas{width:85mm;height:85mm}.poster h2{font-size:54px}}</style></head>
+<body><div class="controls"><a href="./index.html">← ROOMUに戻る</a><h1>教室ドア掲示用QRコード</h1><p>3階建て架空モデルの18室分を作成できます。大学への無断掲示はしないでください。</p><label>公開URL（自動入力）<input id="baseUrl" type="url"></label><label>教室 <select id="roomSelect"><option value="all">全18教室</option></select></label><button id="generate">QRを作成</button> <button id="print">印刷</button><p id="message" role="status"></p></div><main id="posters"></main>
+<script src="./vendor/qr.js"></script><script>
+(()=>{'use strict';
+const names=['大教室','ゼミ室','学生ラウンジ','小教室','自習スペース','個別ブース','講義室','自習教室','面接ブース','多目的教室','演習室','セミナー室','大教室','個室ブース','グループ学習室','フリースペース','講義室','ミーティング室'];
+const rooms=Array.from({length:18},(_,i)=>({id:String((Math.floor(i/6)+1)*100+(i%6)+1),name:names[i]}));
+const $=id=>document.getElementById(id);$('baseUrl').value=new URL('./index.html',location.href).href;
+rooms.forEach(r=>{const o=document.createElement('option');o.value=r.id;o.textContent=r.id+'教室 — '+r.name;$('roomSelect').append(o)});
+function render(){
+ $('posters').replaceChildren();
+ let base;try{base=new URL($('baseUrl').value);if(!['https:','http:'].includes(base.protocol))throw Error();if(base.protocol==='http:'&&!['localhost','127.0.0.1'].includes(base.hostname))throw Error();if(!base.pathname.endsWith('.html'))base=new URL('index.html',base.href.replace(/\/?$/,'/'));}catch(e){$('message').textContent='有効なHTTPS URLを入力してください';return}
+ const selected=rooms.filter(r=>$('roomSelect').value==='all'||r.id===$('roomSelect').value);
+ for(const room of selected){
+ const url=new URL(base);url.search='';url.hash='';url.searchParams.set('room',room.id);url.searchParams.set('via','door');url.searchParams.set('action','checkin');
+ const article=document.createElement('article');article.className='poster';
+ article.innerHTML='<h3>ROOMU. | 空き教室ナビ</h3><p>早稲田キャンパス3号館（架空モデル）</p><h2></h2><p class="name"></p><canvas width="600" height="600"></canvas><h3>読み取って入室登録</h3><p>スマートフォンのカメラで読み取り、リンクを開いてください。</p><p class="url"></p><p class="warning">非公式・授業用デモです。実際の在室・本人確認には利用できません。</p>';
+ article.querySelector('h2').textContent=room.id+'教室';article.querySelector('.name').textContent=room.name;article.querySelector('.url').textContent=url.href;
+ const qr=new RoomuQR(-1,1);qr.addData(url.href);qr.make();let count=qr.getModuleCount(),ctx=article.querySelector('canvas').getContext('2d'),step=480/count;ctx.fillStyle='#fff';ctx.fillRect(0,0,600,600);ctx.fillStyle='#143b48';
+ for(let y=0;y<count;y++)for(let x=0;x<count;x++)if(qr.isDark(y,x)){let x0=Math.round(60+x*step),x1=Math.round(60+(x+1)*step),y0=Math.round(60+y*step),y1=Math.round(60+(y+1)*step);ctx.fillRect(x0,y0,x1-x0,y1-y0)}
+ $('posters').append(article)
+ }
+ $('message').textContent=selected.length+'教室分を生成しました。印刷前にQRをスマホで読み取って動作確認してください。'
+}
+$('generate').addEventListener('click',render);$('roomSelect').addEventListener('change',render);$('print').addEventListener('click',()=>window.print());render();
+})();
+</script></body></html>
