@@ -28,3 +28,8 @@ Settings > Pages に表示されるURLが利用可能になるまでの間は、
 - 利用者テストに際して、学内規程、施設の許可、個人情報保護に留意してください。
 
 QRコード生成実装は Kazuhiko Arase 氏の実装に由来するコードを含みます。利用に際して元ライセンスを遵守してください。
+
+## 公開できない場合（404）
+
+GitHub のリポジトリの **Settings → Pages → Build and deployment** で `Deploy from a branch`、`main`、`/(root)` を選択してください。
+設定後は公開まで数分かかることがあります。404 が続く場合は Settings → Pages にサイト URL が表示されているか、Actions に Pages の公開履歴が表示されるか確認してください。
